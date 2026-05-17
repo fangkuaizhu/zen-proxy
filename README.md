@@ -12,6 +12,17 @@
            DeepSeek V4 Flash Free / 其他免费模型
 ```
 
+## 支持的免费模型
+
+| 模型 | 推理 | 上下文 |
+|------|------|--------|
+| `deepseek-v4-flash-free` | ✅ | 128K |
+| `qwen3.6-plus-free` | ❌ | 128K |
+| `ring-2.6-1t-free` | ❌ | 128K |
+| `minimax-m2.5-free` | ❌ | 128K |
+| `nemotron-3-super-free` | ❌ | 128K |
+| `trinity-large-preview-free` | ❌ | 128K |
+
 ## 启动
 
 ```bash
