@@ -1,0 +1,12 @@
+{
+  "apps": [{
+    "name": "zen-proxy",
+    "script": "server.js",
+    "cwd": "H:\\菲伦的文件夹\\zen-proxy",
+    "watch": false,
+    "max_memory_restart": "100M",
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }]
+}
