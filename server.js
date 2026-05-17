@@ -66,11 +66,17 @@ function proxyRequest(targetUrl, bodyJson, isStream, res) {
   };
 
   const proxyReq = https.request(options, (proxyRes) => {
+    // 检测免费模型每日限额耗尽
+    const isQuotaExceeded = proxyRes.statusCode === 429 ||
+      proxyRes.statusCode === 403 ||
+      proxyRes.statusCode === 402;
+
     const respHeaders = {
       'Content-Type': proxyRes.headers['content-type'] || 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': '*',
       'Connection': 'keep-alive',
+      'X-Zen-Proxy': 'true',
     };
 
     res.writeHead(proxyRes.statusCode, respHeaders);
@@ -82,8 +88,26 @@ function proxyRequest(targetUrl, bodyJson, isStream, res) {
       let data = '';
       proxyRes.on('data', chunk => data += chunk);
       proxyRes.on('end', () => {
+        // 解析免费额度耗尽错误中的等待时间
+        if (isQuotaExceeded) {
+          const match = data.match(/retrying in (\d+)h (\d+)m/);
+          if (match) {
+            const hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const totalMinutes = hours * 60 + minutes;
+            const retryAt = new Date(Date.now() + totalMinutes * 60 * 1000);
+            log(`✗ 免费额度耗尽，${hours}h${minutes}m 后重置（约 ${retryAt.toLocaleString()}）`);
+            errorCount++;
+          } else {
+            log(`✗ 上游返回 ${proxyRes.statusCode}`);
+          }
+        } else if (proxyRes.statusCode >= 400) {
+          log(`✗ 上游返回 ${proxyRes.statusCode} · ${data.length} bytes`);
+          errorCount++;
+        } else {
+          log(`↑ ${proxyRes.statusCode} · ${data.length} bytes`);
+        }
         res.end(data);
-        log(`↑ ${proxyRes.statusCode} · ${data.length} bytes`);
       });
     }
   });
